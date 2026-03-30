@@ -128,6 +128,16 @@ select option{background:#111;color:#fff}
   content:'';position:absolute;top:8px;right:8px;
   width:6px;height:6px;border-radius:50%;background:var(--white);
 }
+.option-card .rank-badge{
+  display:none;position:absolute;top:8px;left:8px;
+  width:22px;height:22px;border-radius:50%;
+  background:#fff;color:#111;font-size:11px;font-weight:800;
+  align-items:center;justify-content:center;
+  font-family:'Inter',sans-serif;
+}
+.option-card.ranked .rank-badge{display:flex}
+.option-card.ranked{border-color:var(--white);background:rgba(255,255,255,0.03)}
+.option-card.ranked::after{display:none}
 .option-card .emoji{font-size:24px;display:block;margin-bottom:10px}
 .option-card .label{font-size:13px;font-weight:700;line-height:1.4;letter-spacing:0.04em;color:#fff}
 .option-card .sub{font-size:11px;color:#bbb;margin-top:4px;line-height:1.4;font-weight:400;letter-spacing:0.02em}
@@ -235,6 +245,16 @@ select option{background:#111;color:#fff}
 
 .final-btns{display:flex;flex-direction:column;gap:1px;margin-top:48px}
 .final-btns .btn{width:100%}
+.share-btns{display:flex;gap:8px;margin-top:12px}
+.share-btn{flex:1;padding:14px;border:1px solid var(--border);background:transparent;color:var(--text);font-family:'Inter','Noto Sans JP',sans-serif;font-size:11px;font-weight:500;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .3s}
+.share-btn:hover{border-color:var(--white);background:rgba(255,255,255,0.05)}
+.share-btn .share-icon{display:block;font-size:18px;margin-bottom:6px}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:1px;background:var(--border);margin-top:16px}
+.summary-item{background:var(--bg);padding:16px;font-size:12px}
+.summary-item .s-label{font-size:9px;color:var(--dim);letter-spacing:2px;font-weight:600;text-transform:uppercase;margin-bottom:6px}
+.summary-item .s-val{font-weight:600;color:#fff;font-size:14px}
+.copied-toast{position:fixed;bottom:40px;left:50%;transform:translateX(-50%);background:#fff;color:#111;padding:12px 28px;font-size:12px;font-weight:600;letter-spacing:1px;z-index:999;opacity:0;transition:opacity .3s}
+.copied-toast.show{opacity:1}
 
 @media print{
   body{background:#fff;color:#111}
@@ -271,19 +291,17 @@ const STEPS=[
     {id:'occupation',label:'職業 / 勤務形態',type:'select',required:true,options:['デスクワーク','立ち仕事','肉体労働','リモートワーク','学生','その他']},
   ]},
   {id:'goal',title:'Goal & Motivation',icon:'02',fields:[
-    {id:'primary_goal',label:'一番の目的は？（1つ選択）',type:'card-single',required:true,options:[
+    {id:'primary_goal',label:'目的は？（1〜3つ選択・選んだ順が優先度になります）',type:'card-ranked',required:true,max:3,options:[
       {emoji:'🥊',label:'試合に出たい',sub:'大会出場を目指す'},
       {emoji:'🔥',label:'痩せたい',sub:'体脂肪を落とす'},
       {emoji:'💪',label:'運動不足解消',sub:'健康的な体づくり'},
       {emoji:'✨',label:'モテたい',sub:'見た目を磨く'},
       {emoji:'🏋️',label:'体型を変えたい',sub:'ボディメイク'},
       {emoji:'🧘',label:'ストレス発散',sub:'リフレッシュ'},
-    ]},
-    {id:'sub_goals',label:'他にも当てはまるものがあれば（複数OK）',type:'card-multi',required:false,options:[
-      {emoji:'👊',label:'護身術を学ぶ'},
-      {emoji:'🤝',label:'仲間を作る'},
-      {emoji:'📈',label:'自信をつける'},
-      {emoji:'🎽',label:'趣味を増やす'},
+      {emoji:'👊',label:'護身術を学ぶ',sub:'護身・格闘スキル'},
+      {emoji:'🤝',label:'仲間を作る',sub:'コミュニティ'},
+      {emoji:'📈',label:'自信をつける',sub:'メンタル強化'},
+      {emoji:'🎽',label:'趣味を増やす',sub:'新しい挑戦'},
     ]},
     {id:'motivation_reason',label:'なぜ今このタイミングで始めようと思った？',type:'textarea',required:true,placeholder:'例: 健康診断の結果が気になった / 自分を変えたいと思った...'},
     {id:'deadline_urgency',label:'3ヶ月後に理想の自分にどれくらいなりたい？',type:'slider',min:1,max:10,default:5,labels:['のんびりでOK','絶対変わる']},
@@ -373,15 +391,75 @@ const STEPS=[
 const T=STEPS.length;let cur=0,D={};
 function init(){rP();rS(0)}
 function rP(){const b=document.getElementById('progress-bar');b.innerHTML='';for(let i=0;i<T;i++){const d=document.createElement('div');d.className='prog-step'+(i<cur?' done':'')+(i===cur?' active':'');b.appendChild(d)}document.getElementById('prog-text').textContent=`STEP ${cur+1} / ${T}`;document.getElementById('prog-pct').textContent=Math.round((cur/T)*100)+'%'}
-function rS(idx){const c=document.getElementById('step-container');const s=STEPS[idx];if(!s){rR();return}const sn=String(idx+1).padStart(2,'0');let h=`<div class="section"><div class="section-head"><div class="section-icon">${sn}</div><div class="section-meta"><div class="section-step">Step ${sn}</div><div class="section-title">${s.title}</div></div></div>`;s.fields.forEach(f=>{h+=`<div class="field"><div class="field-label">${f.label}${f.required?'<span class="req">Required</span>':''}</div>`;if(f.type==='text')h+=`<input type="text" id="${f.id}" placeholder="${f.placeholder||''}" value="${D[f.id]||''}">`;else if(f.type==='number')h+=`<input type="number" id="${f.id}" placeholder="${f.placeholder||''}" value="${D[f.id]||''}">`;else if(f.type==='textarea')h+=`<textarea id="${f.id}" placeholder="${f.placeholder||''}">${D[f.id]||''}</textarea>`;else if(f.type==='select'){h+=`<select id="${f.id}"><option value="">選択してください</option>`;f.options.forEach(o=>{h+=`<option value="${o}" ${D[f.id]===o?'selected':''}>${o}</option>`});h+=`</select>`}else if(f.type==='slider'){const v=D[f.id]||f.default;h+=`<div class="slider-wrap"><input type="range" id="${f.id}" min="${f.min}" max="${f.max}" value="${v}" oninput="document.getElementById('${f.id}_v').textContent=this.value;sD('${f.id}',this.value)"><div class="slider-val" id="${f.id}_v">${v}</div></div>`;if(f.labels)h+=`<div class="slider-labels"><span>${f.labels[0]}</span><span>${f.labels[1]}</span></div>`}else if(f.type==='card-single'){const gc=f.options.length>=7?' col7':f.options.length>4?' col3':'';h+=`<div class="option-grid${gc}">`;f.options.forEach((o,i)=>{h+=`<div class="option-card${D[f.id]===i?' selected':''}" onclick="sel('${f.id}',${i},false,this)"><span class="emoji">${o.emoji}</span><div class="label">${o.label}</div>${o.sub?`<div class="sub">${o.sub}</div>`:''}</div>`});h+=`</div>`}else if(f.type==='card-multi'){const gc2=f.options.length>=7?' col7':'';h+=`<div class="option-grid${gc2}">`;f.options.forEach((o,i)=>{const sl=(D[f.id]||[]).includes(i);h+=`<div class="option-card${sl?' selected':''}" onclick="sel('${f.id}',${i},true,this)"><span class="emoji">${o.emoji}</span><div class="label">${o.label}</div>${o.sub?`<div class="sub">${o.sub}</div>`:''}</div>`});h+=`</div>`}h+=`</div>`});h+=`<div class="btn-row">`;if(idx>0)h+=`<button class="btn btn-secondary" onclick="pv()">&larr; Back</button>`;h+=`<button class="btn btn-primary" onclick="nx()">${idx===T-1?'View Result &rarr;':'Next &rarr;'}</button></div></div>`;c.innerHTML=h;s.fields.filter(f=>f.type==='slider').forEach(f=>{if(D[f.id]===undefined)D[f.id]=f.default});window.scrollTo({top:0,behavior:'smooth'})}
+function rS(idx){const c=document.getElementById('step-container');const s=STEPS[idx];if(!s){rR();return}const sn=String(idx+1).padStart(2,'0');let h=`<div class="section"><div class="section-head"><div class="section-icon">${sn}</div><div class="section-meta"><div class="section-step">Step ${sn}</div><div class="section-title">${s.title}</div></div></div>`;s.fields.forEach(f=>{h+=`<div class="field"><div class="field-label">${f.label}${f.required?'<span class="req">Required</span>':''}</div>`;if(f.type==='text')h+=`<input type="text" id="${f.id}" placeholder="${f.placeholder||''}" value="${D[f.id]||''}">`;else if(f.type==='number')h+=`<input type="number" id="${f.id}" placeholder="${f.placeholder||''}" value="${D[f.id]||''}">`;else if(f.type==='textarea')h+=`<textarea id="${f.id}" placeholder="${f.placeholder||''}">${D[f.id]||''}</textarea>`;else if(f.type==='select'){h+=`<select id="${f.id}"><option value="">選択してください</option>`;f.options.forEach(o=>{h+=`<option value="${o}" ${D[f.id]===o?'selected':''}>${o}</option>`});h+=`</select>`}else if(f.type==='slider'){const v=D[f.id]||f.default;h+=`<div class="slider-wrap"><input type="range" id="${f.id}" min="${f.min}" max="${f.max}" value="${v}" oninput="document.getElementById('${f.id}_v').textContent=this.value;sD('${f.id}',this.value)"><div class="slider-val" id="${f.id}_v">${v}</div></div>`;if(f.labels)h+=`<div class="slider-labels"><span>${f.labels[0]}</span><span>${f.labels[1]}</span></div>`}else if(f.type==='card-ranked'){const gc=f.options.length>4?' col3':'';h+=`<div class="option-grid${gc}" id="ranked_${f.id}">`;const cur=(D[f.id]||[]);f.options.forEach((o,i)=>{const ri=cur.indexOf(i);const isR=ri>-1;h+=`<div class="option-card${isR?' ranked':''}" onclick="selRank('${f.id}',${i},${f.max||3},this)"><div class="rank-badge">${isR?ri+1:''}</div><span class="emoji">${o.emoji}</span><div class="label">${o.label}</div>${o.sub?`<div class="sub">${o.sub}</div>`:''}</div>`});h+=`</div>`}else if(f.type==='card-single'){const gc=f.options.length>=7?' col7':f.options.length>4?' col3':'';h+=`<div class="option-grid${gc}">`;f.options.forEach((o,i)=>{h+=`<div class="option-card${D[f.id]===i?' selected':''}" onclick="sel('${f.id}',${i},false,this)"><span class="emoji">${o.emoji}</span><div class="label">${o.label}</div>${o.sub?`<div class="sub">${o.sub}</div>`:''}</div>`});h+=`</div>`}else if(f.type==='card-multi'){const gc2=f.options.length>=7?' col7':'';h+=`<div class="option-grid${gc2}">`;f.options.forEach((o,i)=>{const sl=(D[f.id]||[]).includes(i);h+=`<div class="option-card${sl?' selected':''}" onclick="sel('${f.id}',${i},true,this)"><span class="emoji">${o.emoji}</span><div class="label">${o.label}</div>${o.sub?`<div class="sub">${o.sub}</div>`:''}</div>`});h+=`</div>`}h+=`</div>`});h+=`<div class="btn-row">`;if(idx>0)h+=`<button class="btn btn-secondary" onclick="pv()">&larr; Back</button>`;h+=`<button class="btn btn-primary" onclick="nx()">${idx===T-1?'View Result &rarr;':'Next &rarr;'}</button></div></div>`;c.innerHTML=h;s.fields.filter(f=>f.type==='slider').forEach(f=>{if(D[f.id]===undefined)D[f.id]=f.default});window.scrollTo({top:0,behavior:'smooth'})}
 function sD(id,v){D[id]=v}
+function selRank(fid,idx,max,el){
+  if(!D[fid])D[fid]=[];
+  const a=D[fid],i=a.indexOf(idx);
+  if(i>-1){a.splice(i,1)}else{if(a.length>=max)return;a.push(idx)}
+  const grid=document.getElementById('ranked_'+fid);
+  grid.querySelectorAll('.option-card').forEach(c=>{c.classList.remove('ranked');c.querySelector('.rank-badge').style.display='none';c.querySelector('.rank-badge').textContent=''});
+  a.forEach((v,ri)=>{const card=grid.children[v];card.classList.add('ranked');const b=card.querySelector('.rank-badge');b.style.display='flex';b.textContent=ri+1});
+}
 function sel(fid,idx,multi,el){if(multi){if(!D[fid])D[fid]=[];const a=D[fid],i=a.indexOf(idx);if(i>-1){a.splice(i,1);el.classList.remove('selected')}else{a.push(idx);el.classList.add('selected')}}else{D[fid]=idx;el.parentElement.querySelectorAll('.option-card').forEach(c=>c.classList.remove('selected'));el.classList.add('selected')}}
 function col(){const s=STEPS[cur];s.fields.forEach(f=>{if(['text','number','textarea','select'].includes(f.type)){const e=document.getElementById(f.id);if(e)D[f.id]=e.value}if(f.type==='slider'){const e=document.getElementById(f.id);if(e)D[f.id]=parseInt(e.value)}})}
-function val(){const s=STEPS[cur];for(const f of s.fields){if(!f.required)continue;const v=D[f.id];if(v===undefined||v===null||v==='')return false;if(f.type==='card-multi'&&Array.isArray(v)&&v.length===0)return false}return true}
+function val(){const s=STEPS[cur];for(const f of s.fields){if(!f.required)continue;const v=D[f.id];if(v===undefined||v===null||v==='')return false;if((f.type==='card-multi'||f.type==='card-ranked')&&Array.isArray(v)&&v.length===0)return false}return true}
 function nx(){col();if(!val()){alert('必須項目を入力してください');return}cur++;rP();rS(cur)}
 function pv(){col();cur--;rP();rS(cur)}
-function rR(){document.getElementById('prog-text').textContent='COMPLETE';document.getElementById('prog-pct').textContent='100%';document.querySelectorAll('.prog-step').forEach(s=>s.className='prog-step done');const d=D;const gL=['試合出場','ダイエット','運動不足解消','モテボディ','ボディメイク','ストレス発散'];const gE=['🥊','🔥','💪','✨','🏋️','🧘'];const goal=gL[d.primary_goal]||'目標設定';const gEmoji=gE[d.primary_goal]||'🎯';const wp=parseInt(d.willpower)||5;const pg=d.past_gym;const rt=d.routine;const urg=parseInt(d.deadline_urgency)||5;let cs=wp*6;if(pg===0)cs-=20;else if(pg===1)cs-=10;else if(pg===2)cs+=15;if(rt===0)cs+=15;else if(rt===1)cs+=5;else cs-=10;cs=Math.max(5,Math.min(100,cs));let rL,rC;if(cs<35){rL='High Risk';rC='var(--danger)'}else if(cs<65){rL='Medium Risk';rC='var(--warn)'}else{rL='Low Risk';rC='var(--success)'}const ht=parseFloat(d.height)/100;const wt=parseFloat(d.weight);const bmi=ht>0?(wt/(ht*ht)).toFixed(1):'-';const tw=parseFloat(d.target_weight)||wt;const diff=(wt-tw).toFixed(1);let strats=[];if(cs<35){strats=[['🔔','毎回トレーニング前にリマインド通知を設定しましょう'],['🤝','バディ制度でペアを組み、一人にならない仕組みを作ります'],['📅','曜日と時間を完全固定し「考えずに行く」習慣をつくります'],['🏅','2週間ごとに小さなご褒美ポイントを設定します'],['📱','サボりそうな時の「励ましメッセージ」を仲間から送ってもらいます']]}else if(cs<65){strats=[['📊','月1回の体組成測定で変化を見える化します'],['📅','日曜に翌週のスケジュールを確定し、通う日を先にブロック'],['👥','仲間との進捗シェアチャットで刺激し合います'],['🎯','1ヶ月ごとに中間目標を設定してレビューします']]}else{strats=[['📈','高めの目標を設定して自分を追い込みましょう'],['🥊','スパーリングや技術向上など質の高いメニューに挑戦'],['🏆','大会やイベントへの参加を視野に入れましょう'],['🌟','後輩のサポート役を担って責任感もプラス']]}const freqL=['週1回','週2〜3回','週5回','土日メイン'];const freq=freqL[d.available_days]||'未設定';const days=['月','火','水','木','金','土','日'];const active=d.preferred_days||[];const workDays=d.work_days||[];const workStyleL=['毎日出社','ハイブリッド','フルリモート','シフト制'];const workStyle=workStyleL[d.work_style]||'未設定';const pairPref=d.pair_pref||'';const timeL=['朝','昼','夕方','夜'];const prefTimes=(d.preferred_time||[]).map(i=>timeL[i]).join(' / ')||'未設定';const m1=d.primary_goal===0?'基礎体力+フォーム習得':d.primary_goal===1?'有酸素中心+食事記録':'基本メニュー習得+運動習慣づくり';const m2=d.primary_goal===0?'スパーリング開始+技術強化':d.primary_goal===1?'強度UP+食事管理本格化':'メニューの幅を広げる+負荷UP';const m3=d.primary_goal===0?'模擬試合+大会エントリー検討':d.primary_goal===1?'目標体重チェック+維持プラン':'定着確認+次の目標設定';
-document.getElementById('step-container').innerHTML=`<div class="result-card"><div class="result-hero"><div class="emoji-big">${gEmoji}</div><h2>${d.name}<br><span>Personal Plan</span></h2><div class="result-badge">${goal}</div></div><div class="stats-row"><div class="stat-card"><div class="val">${bmi}</div><div class="lbl">BMI</div></div><div class="stat-card"><div class="val">${diff>0?'-'+diff:'+'+Math.abs(diff)}<small style="font-size:11px;font-weight:200">kg</small></div><div class="lbl">Goal Gap</div></div><div class="stat-card"><div class="val">${cs}</div><div class="lbl">Score</div></div></div><div class="result-section"><h3><span class="h-icon">—</span>Personality Analysis</h3><div class="p-bar"><div class="p-label">意志の強さ</div><div class="bar-track"><div class="bar-fill" style="width:${wp*10}%;background:var(--white)"></div></div><div class="p-val">${wp}/10</div></div><div class="p-bar"><div class="p-label">継続力</div><div class="bar-track"><div class="bar-fill" style="width:${cs}%;background:var(--white)"></div></div><div class="p-val">${cs}</div></div><div class="p-bar"><div class="p-label">本気度</div><div class="bar-track"><div class="bar-fill" style="width:${urg*10}%;background:var(--white)"></div></div><div class="p-val">${urg}/10</div></div><div class="risk-box"><strong>離脱リスク：${rL}</strong>${cs<35?'手厚いサポートが必要です。仕組み化で「考えなくても通える」状態を作りましょう。':cs<65?'適度なプッシュと自主性のバランスがカギ。定期的な振り返りを大切に。':'自走力があります。高い目標設定でさらに成長できます。'}</div></div><div class="result-section"><h3><span class="h-icon">—</span>Schedule</h3><div style="font-size:11px;color:var(--dim);margin-bottom:20px;line-height:2;letter-spacing:0.06em">${freq}　|　${workStyle}　|　${prefTimes}</div><div style="font-size:8px;color:var(--dim);margin-bottom:6px;letter-spacing:3px;font-weight:500">TRAINING DAYS</div><div class="sched-grid">${days.map((dn,i)=>`<div class="sched-day ${active.includes(i)?'on':'off'}"><div class="d-name">${dn}</div><div class="d-icon">${active.includes(i)?'🥊':'−'}</div></div>`).join('')}</div><div style="font-size:8px;color:var(--dim);margin:16px 0 6px;letter-spacing:3px;font-weight:500">WORK DAYS</div><div class="sched-grid">${days.map((dn,i)=>`<div class="sched-day ${workDays.includes(i)?'on':'off'}"><div class="d-name">${dn}</div><div class="d-icon">${workDays.includes(i)?'🏢':'−'}</div></div>`).join('')}</div>${pairPref?`<div style="margin-top:20px;padding:16px 0;border-top:1px solid var(--border);font-size:11px;color:var(--text2);line-height:1.8"><span style="font-size:8px;color:var(--dim);letter-spacing:3px;font-weight:500;display:block;margin-bottom:6px">PAIR PREFERENCE</span>${pairPref}</div>`:''}<div style="font-size:9px;color:var(--dim);margin-top:16px;letter-spacing:0.06em;line-height:1.8">※ 1日最大2名 / 週8名体制で調整します</div></div><div class="result-section"><h3><span class="h-icon">—</span>3-Month Roadmap</h3><div class="road-item"><div class="road-month">M1</div><div class="road-body"><div class="road-title">習慣化フェーズ</div><div class="road-desc">${m1}</div><div class="road-tag">Most Important</div></div></div><div class="road-item"><div class="road-month">M2</div><div class="road-body"><div class="road-title">成長フェーズ</div><div class="road-desc">${m2}</div><div class="road-tag">Step Up</div></div></div><div class="road-item"><div class="road-month">M3</div><div class="road-body"><div class="road-title">仕上げフェーズ</div><div class="road-desc">${m3}</div><div class="road-tag">Goal</div></div></div></div><div class="result-section"><h3><span class="h-icon">—</span>Support Strategy</h3><ul class="tips-list">${strats.map(s=>`<li><span class="t-icon">${s[0]}</span><span>${s[1]}</span></li>`).join('')}</ul></div><div class="vision-box"><div class="vision-label">3 Months Later</div><div class="vision-text">「${d.three_month_vision||'最高の自分になる'}」</div><div class="vision-name">── ${d.name} ──</div></div><div class="final-btns"><button class="btn btn-primary" onclick="window.print()">Save / Print &rarr;</button><button class="btn btn-secondary" onclick="cur=0;D={};rP();rS(0)">&larr; Start Over</button></div></div>`;window.scrollTo({top:0,behavior:'smooth'})}
+function rR(){document.getElementById('prog-text').textContent='COMPLETE';document.getElementById('prog-pct').textContent='100%';document.querySelectorAll('.prog-step').forEach(s=>s.className='prog-step done');const d=D;const gL=['試合出場','ダイエット','運動不足解消','モテボディ','ボディメイク','ストレス発散','護身術','仲間づくり','自信UP','趣味'];const gE=['🥊','🔥','💪','✨','🏋️','🧘','👊','🤝','📈','🎽'];const goals=Array.isArray(d.primary_goal)?d.primary_goal:[d.primary_goal];const goal=goals.map(g=>gL[g]||'').filter(Boolean).join(' → ')||'目標設定';const gEmoji=gE[goals[0]]||'🎯';const wp=parseInt(d.willpower)||5;const pg=d.past_gym;const rt=d.routine;const urg=parseInt(d.deadline_urgency)||5;let cs=wp*6;if(pg===0)cs-=20;else if(pg===1)cs-=10;else if(pg===2)cs+=15;if(rt===0)cs+=15;else if(rt===1)cs+=5;else cs-=10;cs=Math.max(5,Math.min(100,cs));let rL,rC;if(cs<35){rL='High Risk';rC='var(--danger)'}else if(cs<65){rL='Medium Risk';rC='var(--warn)'}else{rL='Low Risk';rC='var(--success)'}const ht=parseFloat(d.height)/100;const wt=parseFloat(d.weight);const bmi=ht>0?(wt/(ht*ht)).toFixed(1):'-';const tw=parseFloat(d.target_weight)||wt;const diff=(wt-tw).toFixed(1);let strats=[];if(cs<35){strats=[['🔔','毎回トレーニング前にリマインド通知を設定しましょう'],['🤝','バディ制度でペアを組み、一人にならない仕組みを作ります'],['📅','曜日と時間を完全固定し「考えずに行く」習慣をつくります'],['🏅','2週間ごとに小さなご褒美ポイントを設定します'],['📱','サボりそうな時の「励ましメッセージ」を仲間から送ってもらいます']]}else if(cs<65){strats=[['📊','月1回の体組成測定で変化を見える化します'],['📅','日曜に翌週のスケジュールを確定し、通う日を先にブロック'],['👥','仲間との進捗シェアチャットで刺激し合います'],['🎯','1ヶ月ごとに中間目標を設定してレビューします']]}else{strats=[['📈','高めの目標を設定して自分を追い込みましょう'],['🥊','スパーリングや技術向上など質の高いメニューに挑戦'],['🏆','大会やイベントへの参加を視野に入れましょう'],['🌟','後輩のサポート役を担って責任感もプラス']]}const freqL=['週1回','週2〜3回','週5回','土日メイン'];const freq=freqL[d.available_days]||'未設定';const days=['月','火','水','木','金','土','日'];const active=d.preferred_days||[];const workDays=d.work_days||[];const workStyleL=['毎日出社','ハイブリッド','フルリモート','シフト制'];const workStyle=workStyleL[d.work_style]||'未設定';const pairPref=d.pair_pref||'';const timeL=['朝','昼','夕方','夜'];const prefTimes=(d.preferred_time||[]).map(i=>timeL[i]).join(' / ')||'未設定';const g0=goals[0];const m1=g0===0?'基礎体力+フォーム習得':g0===1?'有酸素中心+食事記録':'基本メニュー習得+運動習慣づくり';const m2=g0===0?'スパーリング開始+技術強化':g0===1?'強度UP+食事管理本格化':'メニューの幅を広げる+負荷UP';const m3=g0===0?'模擬試合+大会エントリー検討':g0===1?'目標体重チェック+維持プラン':'定着確認+次の目標設定';
+const workDayCount=workDays.length;const gymDayCount=active.length;const sleepH=d.sleep_hours||'未回答';const dietW=parseInt(d.diet_willingness)||0;const injuryText=d.injury||'特になし';
+const txt=`【${d.name}のカウンセリング結果】\n\n■ 目的：${goal}\n■ BMI：${bmi}｜目標差：${diff>0?'-'+diff:'+'+Math.abs(diff)}kg\n■ 継続スコア：${cs}/100（${rL}）\n■ 意志：${wp}/10｜本気度：${urg}/10\n\n■ 出社：${workStyle}（週${workDayCount}日）\n■ ジム希望：${freq}（${active.map(i=>days[i]).join('・')}）\n■ 時間帯：${prefTimes}\n■ 睡眠：${sleepH}｜食事管理：${dietW}/10\n${pairPref?'■ ペア希望：'+pairPref+'\n':''}\n■ 3ヶ月後：「${d.three_month_vision||'最高の自分になる'}」`;
+document.getElementById('step-container').innerHTML=`<div class="result-card">
+
+<div class="result-hero"><div class="emoji-big">${gEmoji}</div><h2>${d.name}<br><span>Personal Plan</span></h2><div class="result-badge">${goal}</div></div>
+
+<div class="stats-row"><div class="stat-card"><div class="val">${bmi}</div><div class="lbl">BMI</div></div><div class="stat-card"><div class="val">${diff>0?'-'+diff:'+'+Math.abs(diff)}<small style="font-size:11px;font-weight:200">kg</small></div><div class="lbl">Goal Gap</div></div><div class="stat-card"><div class="val">${cs}</div><div class="lbl">Score</div></div></div>
+
+<div class="result-section"><h3><span class="h-icon">—</span>Profile Summary</h3>
+<div class="summary-grid">
+<div class="summary-item"><div class="s-label">出社</div><div class="s-val">${workStyle}（週${workDayCount}日）</div></div>
+<div class="summary-item"><div class="s-label">ジム希望</div><div class="s-val">${freq}</div></div>
+<div class="summary-item"><div class="s-label">通える曜日</div><div class="s-val">${active.map(i=>days[i]).join('・')||'未設定'}（${gymDayCount}日）</div></div>
+<div class="summary-item"><div class="s-label">希望時間帯</div><div class="s-val">${prefTimes}</div></div>
+<div class="summary-item"><div class="s-label">睡眠時間</div><div class="s-val">${sleepH}</div></div>
+<div class="summary-item"><div class="s-label">食事管理</div><div class="s-val">${dietW}/10</div></div>
+<div class="summary-item"><div class="s-label">怪我・不安</div><div class="s-val">${injuryText}</div></div>
+<div class="summary-item"><div class="s-label">ペア希望</div><div class="s-val">${pairPref||'なし'}</div></div>
+</div></div>
+
+<div class="result-section"><h3><span class="h-icon">—</span>Personality Analysis</h3><div class="p-bar"><div class="p-label">意志の強さ</div><div class="bar-track"><div class="bar-fill" style="width:${wp*10}%;background:var(--white)"></div></div><div class="p-val">${wp}/10</div></div><div class="p-bar"><div class="p-label">継続力</div><div class="bar-track"><div class="bar-fill" style="width:${cs}%;background:var(--white)"></div></div><div class="p-val">${cs}</div></div><div class="p-bar"><div class="p-label">本気度</div><div class="bar-track"><div class="bar-fill" style="width:${urg*10}%;background:var(--white)"></div></div><div class="p-val">${urg}/10</div></div><div class="risk-box"><strong>離脱リスク：${rL}</strong>${cs<35?'手厚いサポートが必要です。仕組み化で「考えなくても通える」状態を作りましょう。':cs<65?'適度なプッシュと自主性のバランスがカギ。定期的な振り返りを大切に。':'自走力があります。高い目標設定でさらに成長できます。'}</div></div>
+
+<div class="result-section"><h3><span class="h-icon">—</span>Schedule</h3>
+<div style="font-size:8px;color:var(--dim);margin-bottom:6px;letter-spacing:3px;font-weight:500">TRAINING DAYS（${gymDayCount}日/週）</div><div class="sched-grid">${days.map((dn,i)=>`<div class="sched-day ${active.includes(i)?'on':'off'}"><div class="d-name">${dn}</div><div class="d-icon">${active.includes(i)?'🥊':'−'}</div></div>`).join('')}</div>
+<div style="font-size:8px;color:var(--dim);margin:16px 0 6px;letter-spacing:3px;font-weight:500">WORK DAYS（${workDayCount}日/週）</div><div class="sched-grid">${days.map((dn,i)=>`<div class="sched-day ${workDays.includes(i)?'on':'off'}"><div class="d-name">${dn}</div><div class="d-icon">${workDays.includes(i)?'🏢':'−'}</div></div>`).join('')}</div>
+<div style="font-size:9px;color:var(--dim);margin-top:16px;letter-spacing:0.06em;line-height:1.8">※ 1日最大2名 / 週8名体制で調整します</div></div>
+
+<div class="result-section"><h3><span class="h-icon">—</span>3-Month Roadmap</h3><div class="road-item"><div class="road-month">M1</div><div class="road-body"><div class="road-title">習慣化フェーズ</div><div class="road-desc">${m1}</div><div class="road-tag">Most Important</div></div></div><div class="road-item"><div class="road-month">M2</div><div class="road-body"><div class="road-title">成長フェーズ</div><div class="road-desc">${m2}</div><div class="road-tag">Step Up</div></div></div><div class="road-item"><div class="road-month">M3</div><div class="road-body"><div class="road-title">仕上げフェーズ</div><div class="road-desc">${m3}</div><div class="road-tag">Goal</div></div></div></div>
+
+<div class="result-section"><h3><span class="h-icon">—</span>Support Strategy</h3><ul class="tips-list">${strats.map(s=>`<li><span class="t-icon">${s[0]}</span><span>${s[1]}</span></li>`).join('')}</ul></div>
+
+<div class="vision-box"><div class="vision-label">3 Months Later</div><div class="vision-text">「${d.three_month_vision||'最高の自分になる'}」</div><div class="vision-name">── ${d.name} ──</div></div>
+
+<div class="result-section"><h3><span class="h-icon">—</span>Share</h3>
+<div class="share-btns">
+<div class="share-btn" onclick="copyResult()"><span class="share-icon">📋</span>コピー</div>
+<div class="share-btn" onclick="shareLINE()"><span class="share-icon">💬</span>LINE</div>
+<div class="share-btn" onclick="window.print()"><span class="share-icon">🖨️</span>印刷</div>
+</div></div>
+
+<div class="final-btns"><button class="btn btn-secondary" onclick="cur=0;D={};rP();rS(0)">&larr; Start Over</button></div>
+</div><div class="copied-toast" id="toast">コピーしました</div>`;
+window._resultText=txt;window.scrollTo({top:0,behavior:'smooth'})}
+function copyResult(){
+  navigator.clipboard.writeText(window._resultText).then(()=>{
+    const t=document.getElementById('toast');t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'),2000);
+  });
+}
+function shareLINE(){
+  const url='https://line.me/R/share?text='+encodeURIComponent(window._resultText);
+  window.open(url,'_blank');
+}
 init();
 </script>
 </body>
