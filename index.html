@@ -257,11 +257,31 @@ select option{background:#111;color:#fff}
 .copied-toast.show{opacity:1}
 
 @media print{
-  body{background:#fff;color:#111}
-  .section,.result-section,.result-hero,.stat-card,.vision-box{border-color:#ddd;break-inside:avoid;background:#fff}
-  .progress-wrap,.btn-row,.final-btns{display:none}
-  .p-bar .bar-track{background:#eee}
-  .stat-card{background:#fff}
+  *{-webkit-print-color-adjust:exact !important;print-color-adjust:exact !important;color-adjust:exact !important}
+  body{background:#111 !important;color:#fff !important;font-size:11px}
+  .app{padding:0;max-width:100%}
+  .hero,.progress-wrap,.btn-row,.final-btns,.share-btns,.copied-toast{display:none !important}
+  .result-card{padding:20px}
+  .result-hero{padding:32px 20px;border-color:#333 !important}
+  .result-hero h2{font-size:22px}
+  .result-section{break-inside:avoid;border-color:#333 !important;padding:24px 16px}
+  .stats-row{background:#333 !important}
+  .stat-card{background:#111 !important;padding:20px 8px}
+  .stat-card .val{font-size:28px;color:#fff !important}
+  .stat-card .lbl{color:#999 !important}
+  .summary-grid{background:#333 !important}
+  .summary-item{background:#111 !important}
+  .summary-item .s-val{color:#fff !important}
+  .sched-grid{background:#333 !important}
+  .sched-day{background:#111 !important}
+  .sched-day.on{background:#1e1e1e !important;border:1px solid #fff !important}
+  .vision-box{break-inside:avoid;border-color:#fff !important}
+  .vision-text{color:#fff !important;-webkit-text-fill-color:#fff !important}
+  .p-bar .bar-track{background:#333 !important}
+  .p-bar .bar-fill{background:#fff !important}
+  .road-item{border-color:#333 !important}
+  .tips-list li{border-color:#333 !important}
+  .risk-box{border-color:#333 !important}
 }
 </style>
 </head>
@@ -442,14 +462,20 @@ document.getElementById('step-container').innerHTML=`<div class="result-card">
 
 <div class="result-section"><h3><span class="h-icon">—</span>Share</h3>
 <div class="share-btns">
-<div class="share-btn" onclick="copyResult()"><span class="share-icon">📋</span>コピー</div>
+<div class="share-btn" onclick="copyResult()"><span class="share-icon">📋</span>テキストコピー</div>
+<div class="share-btn" onclick="savePDF()"><span class="share-icon">📄</span>PDF保存</div>
 <div class="share-btn" onclick="shareLINE()"><span class="share-icon">💬</span>LINE</div>
-<div class="share-btn" onclick="window.print()"><span class="share-icon">🖨️</span>印刷</div>
 </div></div>
 
 <div class="final-btns"><button class="btn btn-secondary" onclick="cur=0;D={};rP();rS(0)">&larr; Start Over</button></div>
 </div><div class="copied-toast" id="toast">コピーしました</div>`;
 window._resultText=txt;window.scrollTo({top:0,behavior:'smooth'})}
+function savePDF(){
+  const name=D.name||'result';
+  document.title=name+'_カウンセリング結果';
+  window.print();
+  setTimeout(()=>{document.title='SHINJUKU HEARTS - Counseling Sheet'},1000);
+}
 function copyResult(){
   navigator.clipboard.writeText(window._resultText).then(()=>{
     const t=document.getElementById('toast');t.classList.add('show');
