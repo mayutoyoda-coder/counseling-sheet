@@ -464,7 +464,6 @@ document.getElementById('step-container').innerHTML=`<div class="result-card">
 <div class="share-btns">
 <div class="share-btn" onclick="copyResult()"><span class="share-icon">📋</span>テキストコピー</div>
 <div class="share-btn" onclick="savePDF()"><span class="share-icon">📄</span>PDF保存</div>
-<div class="share-btn" onclick="shareLINE()"><span class="share-icon">💬</span>LINE</div>
 </div></div>
 
 <div class="final-btns"><button class="btn btn-secondary" onclick="cur=0;D={};rP();rS(0)">&larr; Start Over</button></div>
@@ -481,10 +480,6 @@ function copyResult(){
     const t=document.getElementById('toast');t.classList.add('show');
     setTimeout(()=>t.classList.remove('show'),2000);
   });
-}
-function shareLINE(){
-  const url='https://line.me/R/share?text='+encodeURIComponent(window._resultText);
-  window.open(url,'_blank');
 }
 init();
 </script>
